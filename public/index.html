@@ -1,168 +1,201 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Cute Animals</title>
-		<style>
-			* {
-				margin: 0;
-				padding: 0;
-				box-sizing: border-box;
-			}
-			
-			body {
-				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-				background: #f5f5f5;
-				min-height: 100vh;
-			}
-			
-			.main-screen {
-				display: grid;
-				grid-template-columns: 1fr 1fr;
-				grid-template-rows: 1fr 1fr;
-				gap: 20px;
-				padding: 20px;
-				min-height: 100vh;
-			}
-			
-			.animal-card {
-				border-radius: 15px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				font-size: 2rem;
-				font-weight: 600;
-				color: #333;
-				cursor: pointer;
-				transition: transform 0.2s ease;
-				text-align: center;
-			}
-			
-			.animal-card:hover {
-				transform: scale(1.05);
-			}
-			
-			.animal-card:active {
-				transform: scale(0.98);
-			}
-			
-			.capybara {
-				background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
-			}
-			
-			.kitten {
-				background: linear-gradient(135deg, #E6F3FF, #F0F8FF);
-			}
-			
-			.bunny {
-				background: linear-gradient(135deg, #F0FFF0, #F5FFFA);
-			}
-			
-			.penguin {
-				background: linear-gradient(135deg, #FFF8DC, #FFFACD);
-			}
-			
-			.detail-screen {
-				display: none;
-				min-height: 100vh;
-				padding: 40px;
-				flex-direction: column;
-				align-items: center;
-				justify-content: center;
-				text-align: center;
-			}
-			
-			.detail-screen h1 {
-				font-size: 3rem;
-				margin-bottom: 30px;
-				color: #333;
-			}
-			
-			.detail-screen p {
-				font-size: 1.2rem;
-				line-height: 1.6;
-				max-width: 600px;
-				color: #555;
-				margin-bottom: 30px;
-			}
-			
-			.close-btn {
-				position: fixed;
-				top: 20px;
-				left: 20px;
-				width: 40px;
-				height: 40px;
-				background: rgba(0, 0, 0, 0.7);
-				color: white;
-				border: none;
-				border-radius: 50%;
-				font-size: 1.5rem;
-				cursor: pointer;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				transition: background 0.2s ease;
-				z-index: 100;
-			}
-			
-			.close-btn:hover {
-				background: rgba(0, 0, 0, 0.9);
-			}
-		</style>
-	</head>
-	<body>
-		<div id="main-screen" class="main-screen">
-			<div class="animal-card capybara" onclick="showDetail('capybara')">
-				🦫 Capybara
-			</div>
-			<div class="animal-card kitten" onclick="showDetail('kitten')">
-				🐱 Kitten
-			</div>
-			<div class="animal-card bunny" onclick="showDetail('bunny')">
-				🐰 Bunny
-			</div>
-			<div class="animal-card penguin" onclick="showDetail('penguin')">
-				🐧 Penguin
-			</div>
-		</div>
-		
-		<div id="capybara-detail" class="detail-screen capybara">
-			<button class="close-btn" onclick="showMain()">×</button>
-			<h1>🦫 Capybara</h1>
-			<p>Capybaras are the world's largest rodents and are native to South America. These gentle giants are semi-aquatic and love spending time in water. They're incredibly social animals that get along with almost every other species, making them nature's diplomats. Capybaras are herbivores and can weigh up to 146 pounds. Their calm demeanor and friendly nature have made them beloved around the world, often seen relaxing in hot springs or lounging with other animals at zoos.</p>
-		</div>
-		
-		<div id="kitten-detail" class="detail-screen kitten">
-			<button class="close-btn" onclick="showMain()">×</button>
-			<h1>🐱 Kitten</h1>
-			<p>Kittens are young domestic cats, typically under one year of age. These adorable creatures are born after a gestation period of approximately 64-67 days, usually in litters of 2-5. Kittens are born blind and deaf, opening their eyes at around 7-10 days old. They're incredibly playful and curious, using play to develop their hunting skills and social behaviors. Kittens purr when they're content and have an amazing ability to land on their feet due to their righting reflex. They require lots of love, care, and attention as they grow.</p>
-		</div>
-		
-		<div id="bunny-detail" class="detail-screen bunny">
-			<button class="close-btn" onclick="showMain()">×</button>
-			<h1>🐰 Bunny</h1>
-			<p>Bunnies, or rabbits, are small mammals known for their long ears, fluffy tails, and powerful hind legs. They're herbivores that love munching on grass, vegetables, and hay. Rabbits are incredibly social animals that live in groups called colonies in the wild. They communicate through various sounds, body language, and even by thumping their hind feet to warn others of danger. Bunnies can jump up to 3 feet high and run up to 35 mph when needed. They're also known for their prolific breeding, which is where the phrase "breeding like rabbits" comes from.</p>
-		</div>
-		
-		<div id="penguin-detail" class="detail-screen penguin">
-			<button class="close-btn" onclick="showMain()">×</button>
-			<h1>🐧 Penguin</h1>
-			<p>Penguins are flightless birds that have adapted to life in the water. These tuxedo-wearing birds are found primarily in the Southern Hemisphere, with the largest populations in Antarctica. They're excellent swimmers, using their wings as flippers to propel themselves through water at speeds up to 22 mph. Penguins are highly social and often huddle together for warmth in harsh conditions. They're devoted parents, with many species taking turns incubating eggs and caring for their chicks. Despite their formal appearance, penguins are quite playful and have been observed sliding on their bellies for fun!</p>
-		</div>
-		
-		<script>
-			function showDetail(animal) {
-				document.getElementById('main-screen').style.display = 'none';
-				document.getElementById(animal + '-detail').style.display = 'flex';
-			}
-			
-			function showMain() {
-				document.querySelectorAll('.detail-screen').forEach(screen => {
-					screen.style.display = 'none';
-				});
-				document.getElementById('main-screen').style.display = 'grid';
-			}
-		</script>
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cute Animals</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f5f5;
+        min-height: 100vh;
+      }
+
+      .main-screen {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 20px;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      .animal-card {
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        text-align: center;
+      }
+
+      .animal-card:hover {
+        transform: scale(1.05);
+      }
+
+      .animal-card:active {
+        transform: scale(0.98);
+      }
+
+      .capybara {
+        background: linear-gradient(135deg, #ffe4e1, #fff0f5);
+      }
+
+      .kitten {
+        background: linear-gradient(135deg, #e6f3ff, #f0f8ff);
+      }
+
+      .bunny {
+        background: linear-gradient(135deg, #f0fff0, #f5fffa);
+      }
+
+      .penguin {
+        background: linear-gradient(135deg, #fff8dc, #fffacd);
+      }
+
+      .detail-screen {
+        display: none;
+        min-height: 100vh;
+        padding: 40px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .detail-screen h1 {
+        font-size: 3rem;
+        margin-bottom: 30px;
+        color: #333;
+      }
+
+      .detail-screen p {
+        font-size: 1.2rem;
+        line-height: 1.6;
+        max-width: 600px;
+        color: #555;
+        margin-bottom: 30px;
+      }
+
+      .close-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s ease;
+        z-index: 100;
+      }
+
+      .close-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main-screen" class="main-screen">
+      <div class="animal-card capybara" data-animal="capybara">🦫 Capybara</div>
+      <div class="animal-card kitten" data-animal="kitten">🐱 Kitten</div>
+      <div class="animal-card bunny" data-animal="bunny">🐰 Bunny</div>
+      <div class="animal-card penguin" data-animal="penguin">🐧 Penguin</div>
+    </div>
+
+    <div id="capybara-detail" class="detail-screen capybara">
+      <button class="close-btn">×</button>
+      <h1>🦫 Capybara</h1>
+      <p>
+        Capybaras are the world's largest rodents and are native to South America. These gentle giants are semi-aquatic
+        and love spending time in water. They're incredibly social animals that get along with almost every other
+        species, making them nature's diplomats. Capybaras are herbivores and can weigh up to 146 pounds. Their calm
+        demeanor and friendly nature have made them beloved around the world, often seen relaxing in hot springs or
+        lounging with other animals at zoos.
+      </p>
+    </div>
+
+    <div id="kitten-detail" class="detail-screen kitten">
+      <button class="close-btn">×</button>
+      <h1>🐱 Kitten</h1>
+      <p>
+        Kittens are young domestic cats, typically under one year of age. These adorable creatures are born after a
+        gestation period of approximately 64-67 days, usually in litters of 2-5. Kittens are born blind and deaf,
+        opening their eyes at around 7-10 days old. They're incredibly playful and curious, using play to develop their
+        hunting skills and social behaviors. Kittens purr when they're content and have an amazing ability to land on
+        their feet due to their righting reflex. They require lots of love, care, and attention as they grow.
+      </p>
+    </div>
+
+    <div id="bunny-detail" class="detail-screen bunny">
+      <button class="close-btn">×</button>
+      <h1>🐰 Bunny</h1>
+      <p>
+        Bunnies, or rabbits, are small mammals known for their long ears, fluffy tails, and powerful hind legs. They're
+        herbivores that love munching on grass, vegetables, and hay. Rabbits are incredibly social animals that live in
+        groups called colonies in the wild. They communicate through various sounds, body language, and even by thumping
+        their hind feet to warn others of danger. Bunnies can jump up to 3 feet high and run up to 35 mph when needed.
+        They're also known for their prolific breeding, which is where the phrase "breeding like rabbits" comes from.
+      </p>
+    </div>
+
+    <div id="penguin-detail" class="detail-screen penguin">
+      <button class="close-btn">×</button>
+      <h1>🐧 Penguin</h1>
+      <p>
+        Penguins are flightless birds that have adapted to life in the water. These tuxedo-wearing birds are found
+        primarily in the Southern Hemisphere, with the largest populations in Antarctica. They're excellent swimmers,
+        using their wings as flippers to propel themselves through water at speeds up to 22 mph. Penguins are highly
+        social and often huddle together for warmth in harsh conditions. They're devoted parents, with many species
+        taking turns incubating eggs and caring for their chicks. Despite their formal appearance, penguins are quite
+        playful and have been observed sliding on their bellies for fun!
+      </p>
+    </div>
+
+    <script>
+      function showDetail(animal) {
+        document.getElementById("main-screen").style.display = "none";
+        document.getElementById(animal + "-detail").style.display = "flex";
+      }
+
+      function showMain() {
+        document.querySelectorAll(".detail-screen").forEach((screen) => {
+          screen.style.display = "none";
+        });
+        document.getElementById("main-screen").style.display = "grid";
+      }
+
+      // Add event listeners when page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        // Add click handlers for animal cards
+        document.querySelectorAll(".animal-card").forEach((card) => {
+          card.addEventListener("click", function () {
+            const animal = this.getAttribute("data-animal");
+            showDetail(animal);
+          });
+        });
+
+        // Add click handlers for close buttons
+        document.querySelectorAll(".close-btn").forEach((btn) => {
+          btn.addEventListener("click", showMain);
+        });
+      });
+    </script>
+  </body>
 </html>
