@@ -41,6 +41,13 @@
         cursor: pointer;
         transition: transform 0.2s ease;
         text-align: center;
+        text-decoration: none;
+      }
+
+      .animal-card:focus {
+        outline: 3px solid #0066cc;
+        outline-offset: 2px;
+        transform: scale(1.02);
       }
 
       .capybara {
@@ -136,18 +143,26 @@
       .close-btn:hover {
         background: rgba(0, 0, 0, 0.9);
       }
+
+      .close-btn:focus {
+        outline: 3px solid #0066cc;
+        outline-offset: 2px;
+        background: rgba(0, 0, 0, 0.9);
+      }
     </style>
   </head>
   <body>
-    <div id="main-screen" class="main-screen">
-      <div class="animal-card capybara" data-animal="capybara"><span>🦫 Capybara</span></div>
-      <div class="animal-card kitten" data-animal="kitten"><span>🐱 Kitten</span></div>
-      <div class="animal-card bunny" data-animal="bunny"><span>🐰 Bunny</span></div>
-      <div class="animal-card penguin" data-animal="penguin"><span>🐧 Penguin</span></div>
-    </div>
+    <main id="main-screen" class="main-screen">
+      <a href="/capybara" class="animal-card capybara" data-animal="capybara"><span>🦫 Capybara</span></a>
+      <a href="/kitten" class="animal-card kitten" data-animal="kitten"><span>🐱 Kitten</span></a>
+      <a href="/bunny" class="animal-card bunny" data-animal="bunny"><span>🐰 Bunny</span></a>
+      <a href="/penguin" class="animal-card penguin" data-animal="penguin"><span>🐧 Penguin</span></a>
+    </main>
 
-    <div id="capybara-detail" class="detail-screen capybara">
-      <button class="close-btn">×</button>
+    <article id="capybara-detail" class="detail-screen capybara">
+      <button class="close-btn" aria-label="Close and return to main view">
+        <img src="/chevron-down.svg" alt="" width="20" height="20">
+      </button>
       <h1>🦫 Capybara</h1>
       <p>
         Capybaras are the world's largest rodents and are native to South America. These gentle giants are semi-aquatic
@@ -156,10 +171,12 @@
         demeanor and friendly nature have made them beloved around the world, often seen relaxing in hot springs or
         lounging with other animals at zoos.
       </p>
-    </div>
+    </article>
 
-    <div id="kitten-detail" class="detail-screen kitten">
-      <button class="close-btn">×</button>
+    <article id="kitten-detail" class="detail-screen kitten">
+      <button class="close-btn" aria-label="Close and return to main view">
+        <img src="/chevron-down.svg" alt="" width="20" height="20">
+      </button>
       <h1>🐱 Kitten</h1>
       <p>
         Kittens are young domestic cats, typically under one year of age. These adorable creatures are born after a
@@ -168,10 +185,12 @@
         hunting skills and social behaviors. Kittens purr when they're content and have an amazing ability to land on
         their feet due to their righting reflex. They require lots of love, care, and attention as they grow.
       </p>
-    </div>
+    </article>
 
-    <div id="bunny-detail" class="detail-screen bunny">
-      <button class="close-btn">×</button>
+    <article id="bunny-detail" class="detail-screen bunny">
+      <button class="close-btn" aria-label="Close and return to main view">
+        <img src="/chevron-down.svg" alt="" width="20" height="20">
+      </button>
       <h1>🐰 Bunny</h1>
       <p>
         Bunnies, or rabbits, are small mammals known for their long ears, fluffy tails, and powerful hind legs. They're
@@ -180,10 +199,12 @@
         their hind feet to warn others of danger. Bunnies can jump up to 3 feet high and run up to 35 mph when needed.
         They're also known for their prolific breeding, which is where the phrase "breeding like rabbits" comes from.
       </p>
-    </div>
+    </article>
 
-    <div id="penguin-detail" class="detail-screen penguin">
-      <button class="close-btn">×</button>
+    <article id="penguin-detail" class="detail-screen penguin">
+      <button class="close-btn" aria-label="Close and return to main view">
+        <img src="/chevron-down.svg" alt="" width="20" height="20">
+      </button>
       <h1>🐧 Penguin</h1>
       <p>
         Penguins are flightless birds that have adapted to life in the water. These tuxedo-wearing birds are found
@@ -193,7 +214,7 @@
         taking turns incubating eggs and caring for their chicks. Despite their formal appearance, penguins are quite
         playful and have been observed sliding on their bellies for fun!
       </p>
-    </div>
+    </article>
 
     <script>
       function showDetail(animal, updateURL = true) {
@@ -260,7 +281,14 @@
 
         // Add click handlers for animal cards
         document.querySelectorAll(".animal-card").forEach((card) => {
-          card.addEventListener("click", function () {
+          card.addEventListener("click", function (event) {
+            // Allow default behavior if modifier keys are pressed (cmd+click, ctrl+click, etc)
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) {
+              return;
+            }
+
+            // Prevent default navigation for normal clicks
+            event.preventDefault();
             const animal = this.getAttribute("data-animal");
             showDetail(animal);
           });
