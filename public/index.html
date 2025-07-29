@@ -14,16 +14,20 @@
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: #f5f5f5;
-        min-height: 100vh;
+        min-height: 100dvh;
       }
 
       .main-screen {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr 1fr 1fr;
         gap: 20px;
         padding: 20px;
-        min-height: 100vh;
+        min-height: 100dvh;
+      }
+
+      .main-screen.hide {
+        display: none;
       }
 
       .animal-card {
@@ -31,7 +35,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-size: 26px;
         font-weight: 600;
         color: #333;
         cursor: pointer;
@@ -39,28 +43,48 @@
         text-align: center;
       }
 
-      .animal-card:hover {
-        transform: scale(1.05);
-      }
-
-      .animal-card:active {
-        transform: scale(0.98);
-      }
-
       .capybara {
         background: linear-gradient(135deg, #ffe4e1, #fff0f5);
+      }
+      .main-screen:not(.hide) .capybara span {
+        view-transition-name: capybara;
       }
 
       .kitten {
         background: linear-gradient(135deg, #e6f3ff, #f0f8ff);
       }
+      .main-screen:not(.hide) .kitten span {
+        view-transition-name: kitten;
+      }
 
       .bunny {
         background: linear-gradient(135deg, #f0fff0, #f5fffa);
       }
+      .main-screen:not(.hide) .bunny span {
+        view-transition-name: bunny;
+      }
 
       .penguin {
         background: linear-gradient(135deg, #fff8dc, #fffacd);
+      }
+      .main-screen:not(.hide) .penguin span {
+        view-transition-name: penguin;
+      }
+
+      .detail-screen.capybara.show h1 {
+        view-transition-name: capybara;
+      }
+
+      .detail-screen.kitten.show h1 {
+        view-transition-name: kitten;
+      }
+
+      .detail-screen.bunny.show h1 {
+        view-transition-name: bunny;
+      }
+
+      .detail-screen.penguin.show h1 {
+        view-transition-name: penguin;
       }
 
       .detail-screen {
@@ -71,6 +95,9 @@
         align-items: center;
         justify-content: center;
         text-align: center;
+      }
+      .detail-screen.show {
+        display: flex;
       }
 
       .detail-screen h1 {
@@ -113,10 +140,10 @@
   </head>
   <body>
     <div id="main-screen" class="main-screen">
-      <div class="animal-card capybara" data-animal="capybara">🦫 Capybara</div>
-      <div class="animal-card kitten" data-animal="kitten">🐱 Kitten</div>
-      <div class="animal-card bunny" data-animal="bunny">🐰 Bunny</div>
-      <div class="animal-card penguin" data-animal="penguin">🐧 Penguin</div>
+      <div class="animal-card capybara" data-animal="capybara"><span>🦫 Capybara</span></div>
+      <div class="animal-card kitten" data-animal="kitten"><span>🐱 Kitten</span></div>
+      <div class="animal-card bunny" data-animal="bunny"><span>🐰 Bunny</span></div>
+      <div class="animal-card penguin" data-animal="penguin"><span>🐧 Penguin</span></div>
     </div>
 
     <div id="capybara-detail" class="detail-screen capybara">
@@ -169,20 +196,68 @@
     </div>
 
     <script>
-      function showDetail(animal) {
-        document.getElementById("main-screen").style.display = "none";
-        document.getElementById(animal + "-detail").style.display = "flex";
+      function showDetail(animal, updateURL = true) {
+        document.startViewTransition(() => {
+          document.getElementById("main-screen").classList.add("hide");
+          document.getElementById(animal + "-detail").classList.add("show");
+        });
+
+        if (updateURL) {
+          history.pushState({ animal }, "", "/" + animal);
+        }
       }
 
-      function showMain() {
-        document.querySelectorAll(".detail-screen").forEach((screen) => {
-          screen.style.display = "none";
+      function showMain(updateURL = true) {
+        document.startViewTransition(() => {
+          document.querySelectorAll(".detail-screen").forEach((screen) => {
+            screen.classList.remove("show");
+          });
+          document.getElementById("main-screen").classList.remove("hide");
         });
-        document.getElementById("main-screen").style.display = "grid";
+
+        if (updateURL) {
+          history.pushState({ main: true }, "", "/");
+        }
       }
+
+      function handleRoute() {
+        const path = window.location.pathname;
+        const validAnimals = ["capybara", "kitten", "bunny", "penguin"];
+
+        if (path === "/") {
+          showMain(false);
+        } else {
+          const animal = path.substring(1); // Remove leading slash
+          if (validAnimals.includes(animal)) {
+            showDetail(animal, false);
+          } else {
+            // Invalid route, redirect to home
+            history.replaceState({ main: true }, "", "/");
+            showMain(false);
+          }
+        }
+      }
+
+      // Handle browser back/forward buttons
+      window.addEventListener("popstate", function (event) {
+        handleRoute();
+      });
+
+      // Handle escape key to close detail view
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          const currentDetailScreen = document.querySelector(".detail-screen.show");
+          if (currentDetailScreen) {
+            showMain();
+          }
+        }
+      });
 
       // Add event listeners when page loads
       document.addEventListener("DOMContentLoaded", function () {
+        // Handle initial route
+        handleRoute();
+
         // Add click handlers for animal cards
         document.querySelectorAll(".animal-card").forEach((card) => {
           card.addEventListener("click", function () {
