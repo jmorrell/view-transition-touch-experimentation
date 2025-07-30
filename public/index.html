@@ -17,6 +17,63 @@
         min-height: 100dvh;
       }
 
+      /*
+				TODO: add variables for the durations and delays
+			*/
+      ::view-transition {
+        --vt-base-duration: 1s;
+
+        --vt-description-duration: 0.5;
+        --vt-description-delay: 0;
+      }
+
+      /* Allow cursor to send events to underlying page while a VT is running */
+      ::view-transition {
+        pointer-events: none;
+      }
+
+      /* Apply base duration to all */
+      ::view-transition-group(*) {
+        animation-duration: var(--vt-base-duration);
+      }
+
+      /* Also inherit the delay from the group onto the child pseudos */
+      ::view-transition-image-pair(*),
+      ::view-transition-new(*),
+      ::view-transition-old(*) {
+        animation-delay: inherit;
+      }
+
+      ::view-transition-old(*) {
+        z-index: 2;
+      }
+
+      /* Some keyframes to use */
+      @keyframes slide-up {
+        to {
+          translate: 0 -100%;
+        }
+      }
+      @keyframes slide-down {
+        from {
+          translate: 0 -100%;
+        }
+      }
+      @keyframes fade-out {
+        to {
+          opacity: 0;
+        }
+      }
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+      }
+
+      :root {
+        view-transition-name: none;
+      }
+
       .main-screen {
         display: grid;
         grid-template-columns: 1fr;
@@ -53,44 +110,44 @@
       .capybara {
         background: linear-gradient(135deg, #ffe4e1, #fff0f5);
       }
-      .main-screen:not(.hide) .capybara span {
+      .main-screen:not(.hide) .capybara {
         view-transition-name: capybara;
       }
 
       .kitten {
         background: linear-gradient(135deg, #e6f3ff, #f0f8ff);
       }
-      .main-screen:not(.hide) .kitten span {
+      .main-screen:not(.hide) .kitten {
         view-transition-name: kitten;
       }
 
       .bunny {
         background: linear-gradient(135deg, #f0fff0, #f5fffa);
       }
-      .main-screen:not(.hide) .bunny span {
+      .main-screen:not(.hide) .bunny {
         view-transition-name: bunny;
       }
 
       .penguin {
         background: linear-gradient(135deg, #fff8dc, #fffacd);
       }
-      .main-screen:not(.hide) .penguin span {
+      .main-screen:not(.hide) .penguin {
         view-transition-name: penguin;
       }
 
-      .detail-screen.capybara.show h1 {
+      .detail-screen.capybara.show {
         view-transition-name: capybara;
       }
 
-      .detail-screen.kitten.show h1 {
+      .detail-screen.kitten.show {
         view-transition-name: kitten;
       }
 
-      .detail-screen.bunny.show h1 {
+      .detail-screen.bunny.show {
         view-transition-name: bunny;
       }
 
-      .detail-screen.penguin.show h1 {
+      .detail-screen.penguin.show {
         view-transition-name: penguin;
       }
 
@@ -138,6 +195,7 @@
         justify-content: center;
         transition: background 0.2s ease;
         z-index: 100;
+        touch-action: none;
       }
 
       .close-btn:hover {
@@ -161,7 +219,7 @@
 
     <article id="capybara-detail" class="detail-screen capybara">
       <button class="close-btn" aria-label="Close and return to main view">
-        <img src="/chevron-down.svg" alt="" width="20" height="20">
+        <img src="/chevron-down.svg" alt="" width="20" height="20" />
       </button>
       <h1>🦫 Capybara</h1>
       <p>
@@ -175,7 +233,7 @@
 
     <article id="kitten-detail" class="detail-screen kitten">
       <button class="close-btn" aria-label="Close and return to main view">
-        <img src="/chevron-down.svg" alt="" width="20" height="20">
+        <img src="/chevron-down.svg" alt="" width="20" height="20" />
       </button>
       <h1>🐱 Kitten</h1>
       <p>
@@ -189,7 +247,7 @@
 
     <article id="bunny-detail" class="detail-screen bunny">
       <button class="close-btn" aria-label="Close and return to main view">
-        <img src="/chevron-down.svg" alt="" width="20" height="20">
+        <img src="/chevron-down.svg" alt="" width="20" height="20" />
       </button>
       <h1>🐰 Bunny</h1>
       <p>
@@ -203,7 +261,7 @@
 
     <article id="penguin-detail" class="detail-screen penguin">
       <button class="close-btn" aria-label="Close and return to main view">
-        <img src="/chevron-down.svg" alt="" width="20" height="20">
+        <img src="/chevron-down.svg" alt="" width="20" height="20" />
       </button>
       <h1>🐧 Penguin</h1>
       <p>
@@ -217,6 +275,212 @@
     </article>
 
     <script>
+      // Boolen that indicates if we are handling a gesture or not
+      let activeGesture = false;
+
+      // Get screen dimensions
+      let screenWidth = window.innerWidth;
+      let screenHeight = window.innerHeight;
+
+      // Update dimensions on resize
+      window.addEventListener("resize", () => {
+        screenWidth = window.innerWidth;
+        screenHeight = window.innerHeight;
+      });
+
+      async function onPointerDown(downEvent) {
+        // Already handling a gesture or no button pressed? Abort!
+        if (activeGesture || !downEvent.buttons) return;
+
+        // Check if target is not a child of .close-btn
+        let closeBtn = downEvent.target.closest(".close-btn");
+        if (!closeBtn) return;
+
+        console.log("downEvent.target", downEvent.target);
+        console.log("downEvent", downEvent);
+
+        // Mark that we are handling a gesture
+        activeGesture = true;
+
+        // A shared Abort Controller to be passed into each event handler.
+        // That way, we can abort them all in one go, by calling .abort() on the instance
+        const controller = new AbortController();
+
+        // The base duration of the animation
+        // Same as --vt-base-duration in the CSS
+        const baseDuration = 1000;
+
+        // Prevent text-selection
+        document.documentElement.style.userSelect = "none";
+        document.documentElement.style.touchAction = "none";
+
+        // Keep track of mouse positions
+        const startX = downEvent.pageX;
+        const startY = downEvent.pageY;
+        let currentX = startX;
+        let currentY = startY;
+        let prevX = startX;
+        let prevY = startY;
+
+        console.log("startX", startX, "startY", startY);
+
+        // Keep track of a View Transition and all related animations
+        let activeViewTransition = null;
+        let activeAnimations = [];
+        let oldView;
+
+        // Method that starts the View Transition
+        const startViewTransition = async () => {
+          // Start the View Transition
+          activeViewTransition = document.startViewTransition(() => {
+            document.querySelectorAll(".detail-screen").forEach((screen) => {
+              screen.classList.remove("show");
+            });
+            document.getElementById("main-screen").classList.remove("hide");
+          });
+          await activeViewTransition.ready;
+
+          // Get view transition elements through animations
+          activeAnimations = document
+            .getAnimations()
+            .filter(
+              (anim) =>
+                anim.effect.target === document.documentElement &&
+                anim.effect.pseudoElement?.startsWith("::view-transition")
+            );
+
+          // Find the specific old view transition element
+          let oldViewAnimation = activeAnimations.find(
+            (anim) => anim.effect.pseudoElement === "::view-transition-old(capybara)"
+          );
+
+          console.log("activeViewTransition", activeViewTransition);
+          console.log("activeAnimations", activeAnimations);
+
+          // Access the pseudo-element through the animation's effect
+          if (oldViewAnimation) {
+            oldView = oldViewAnimation.effect.target;
+            console.log("Found old view transition element:", oldView);
+          }
+
+          // Immediately pause all animations linked to it
+          for (const anim of activeAnimations) anim.pause();
+        };
+
+        // Method that updates the tracked animations
+        const updateAnimations = () => {
+          // No need to do anything when there are no animations being tracked
+          if (!activeAnimations.length) return;
+
+          // No need to do anything either when dragging in the wrong direction
+          // if (isNoop) return;
+
+          // Determine dragging delta
+          // const dragDelta = ["up", "down"].includes(neededDirection)
+          //   ? Math.abs(currentY - startY)
+          //   : Math.abs(currentX - startX);
+          console.log("currentY", currentY, "currentX", currentX);
+        };
+
+        // Was the result of dragging a no-op?
+        // E.g. user started dragging in one direction but then dragged all the way back
+        let isNoop = false;
+
+        // Method that gets called upon releasing or cancelling the pointer
+        // This method cleans up all listeners, and then snaps the VT (if any) to one of either ends.
+        const done = async (upEvent) => {
+          console.log("done", upEvent);
+          // Only continue if its the same pointerId as from the downEvent
+          if (downEvent.pointerId !== upEvent.pointerId) return;
+
+          // Re-enable text-selection
+          document.documentElement.style.userSelect = "inherit";
+          document.documentElement.style.touchAction = "initial";
+
+          // If there wasn’t an active View Transition, then there’s nothing left to do
+          if (!activeViewTransition) return;
+
+          // If it was a NO-OP then skip the transition
+          // but also undo the DOM update
+          // if (isNoop) {
+          //   activeViewTransition.skipTransition();
+          //   document.querySelector(".card").classList.toggle("small");
+          //   return;
+          // }
+
+          // Play all animations
+          // for (const anim of activeAnimations) {
+          //   anim.play();
+          // }
+
+          // Allow a next gesture to be handled
+          // activeGesture = false;
+
+          // Signal all things that listen to the same controller to abort
+          // controller.abort();
+
+          // Clean up
+          // await Promise.all(activeAnimations.map((a) => a.finished));
+          // activeViewTransition = null;
+        };
+
+        // Clean up when releasing the pointer
+        for (const eventName of ["pointerup", "pointercancel"]) {
+          document.addEventListener(eventName, done, { signal: controller.signal });
+        }
+        // Update the position when moving the pointer
+        document.addEventListener(
+          "pointercancel",
+          (cancelEvent) => {
+            console.log(cancelEvent);
+          },
+          { signal: controller.signal }
+        );
+
+        // Update the position when moving the pointer
+        document.addEventListener(
+          "pointermove",
+          (moveEvent) => {
+            // Only continue if its the same pointerId as from the downEvent
+            if (downEvent.pointerId !== moveEvent.pointerId) return;
+
+            moveEvent.preventDefault();
+            moveEvent.stopPropagation();
+
+            // Start a VT if none exist yet.
+            // Otherwise update the animations
+            if (!activeViewTransition) {
+              startViewTransition();
+            } else {
+              updateAnimations();
+            }
+
+            console.log("moveEvent", moveEvent);
+            console.log("moveEvent.screenY", moveEvent.screenY);
+            console.log("moveEvent.screenX", moveEvent.screenX);
+
+            // Calculate percentage of screen width and height
+            let percentageX = (moveEvent.screenX / screenWidth) * 100;
+            let percentageY = (moveEvent.screenY / screenHeight) * 100;
+
+            console.log("percentageX", percentageX, "percentageY", percentageY);
+
+            if (oldView) {
+              oldView.style.transform = `scale(${100 - percentageX}%)`;
+            } else {
+              console.log("no oldView");
+            }
+
+            // Store new cursor position
+            currentY = moveEvent.pageY;
+            currentX = moveEvent.pageX;
+
+            console.log("currentX", currentX, "currentY", currentY);
+          },
+          { signal: controller.signal }
+        );
+      }
+
       function showDetail(animal, updateURL = true) {
         document.startViewTransition(() => {
           document.getElementById("main-screen").classList.add("hide");
@@ -296,7 +560,8 @@
 
         // Add click handlers for close buttons
         document.querySelectorAll(".close-btn").forEach((btn) => {
-          btn.addEventListener("click", showMain);
+          // btn.addEventListener("click", showMain);
+          document.addEventListener("pointerdown", onPointerDown);
         });
       });
     </script>
