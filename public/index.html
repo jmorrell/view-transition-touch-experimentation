@@ -159,6 +159,7 @@
         align-items: center;
         justify-content: center;
         text-align: center;
+        transition: border-radius 0.2s ease;
       }
       .detail-screen.show {
         display: flex;
@@ -278,17 +279,9 @@
       // Boolen that indicates if we are handling a gesture or not
       let activeGesture = false;
 
-      // Get screen dimensions
-      let screenWidth = window.innerWidth;
-      let screenHeight = window.innerHeight;
-
-      // Update dimensions on resize
-      window.addEventListener("resize", () => {
-        screenWidth = window.innerWidth;
-        screenHeight = window.innerHeight;
-      });
-
       async function onPointerDown(downEvent) {
+        console.log("onPointerDown", downEvent);
+
         // Already handling a gesture or no button pressed? Abort!
         if (activeGesture || !downEvent.buttons) return;
 
@@ -296,8 +289,10 @@
         let closeBtn = downEvent.target.closest(".close-btn");
         if (!closeBtn) return;
 
-        console.log("downEvent.target", downEvent.target);
-        console.log("downEvent", downEvent);
+        // Get screen dimensions
+        let screenWidth = window.innerWidth;
+        let screenHeight = window.innerHeight;
+        let detailScreen = downEvent.target.closest(".detail-screen");
 
         // Mark that we are handling a gesture
         activeGesture = true;
@@ -306,90 +301,15 @@
         // That way, we can abort them all in one go, by calling .abort() on the instance
         const controller = new AbortController();
 
-        // The base duration of the animation
-        // Same as --vt-base-duration in the CSS
-        const baseDuration = 1000;
-
         // Prevent text-selection
         document.documentElement.style.userSelect = "none";
         document.documentElement.style.touchAction = "none";
-
-        // Keep track of mouse positions
-        const startX = downEvent.pageX;
-        const startY = downEvent.pageY;
-        let currentX = startX;
-        let currentY = startY;
-        let prevX = startX;
-        let prevY = startY;
-
-        console.log("startX", startX, "startY", startY);
-
-        // Keep track of a View Transition and all related animations
-        let activeViewTransition = null;
-        let activeAnimations = [];
-        let oldView;
-
-        // Method that starts the View Transition
-        const startViewTransition = async () => {
-          // Start the View Transition
-          activeViewTransition = document.startViewTransition(() => {
-            document.querySelectorAll(".detail-screen").forEach((screen) => {
-              screen.classList.remove("show");
-            });
-            document.getElementById("main-screen").classList.remove("hide");
-          });
-          await activeViewTransition.ready;
-
-          // Get view transition elements through animations
-          activeAnimations = document
-            .getAnimations()
-            .filter(
-              (anim) =>
-                anim.effect.target === document.documentElement &&
-                anim.effect.pseudoElement?.startsWith("::view-transition")
-            );
-
-          // Find the specific old view transition element
-          let oldViewAnimation = activeAnimations.find(
-            (anim) => anim.effect.pseudoElement === "::view-transition-old(capybara)"
-          );
-
-          console.log("activeViewTransition", activeViewTransition);
-          console.log("activeAnimations", activeAnimations);
-
-          // Access the pseudo-element through the animation's effect
-          if (oldViewAnimation) {
-            oldView = oldViewAnimation.effect.target;
-            console.log("Found old view transition element:", oldView);
-          }
-
-          // Immediately pause all animations linked to it
-          for (const anim of activeAnimations) anim.pause();
-        };
-
-        // Method that updates the tracked animations
-        const updateAnimations = () => {
-          // No need to do anything when there are no animations being tracked
-          if (!activeAnimations.length) return;
-
-          // No need to do anything either when dragging in the wrong direction
-          // if (isNoop) return;
-
-          // Determine dragging delta
-          // const dragDelta = ["up", "down"].includes(neededDirection)
-          //   ? Math.abs(currentY - startY)
-          //   : Math.abs(currentX - startX);
-          console.log("currentY", currentY, "currentX", currentX);
-        };
-
-        // Was the result of dragging a no-op?
-        // E.g. user started dragging in one direction but then dragged all the way back
-        let isNoop = false;
 
         // Method that gets called upon releasing or cancelling the pointer
         // This method cleans up all listeners, and then snaps the VT (if any) to one of either ends.
         const done = async (upEvent) => {
           console.log("done", upEvent);
+
           // Only continue if its the same pointerId as from the downEvent
           if (downEvent.pointerId !== upEvent.pointerId) return;
 
@@ -397,31 +317,13 @@
           document.documentElement.style.userSelect = "inherit";
           document.documentElement.style.touchAction = "initial";
 
-          // If there wasn’t an active View Transition, then there’s nothing left to do
-          if (!activeViewTransition) return;
+          activeGesture = false;
 
-          // If it was a NO-OP then skip the transition
-          // but also undo the DOM update
-          // if (isNoop) {
-          //   activeViewTransition.skipTransition();
-          //   document.querySelector(".card").classList.toggle("small");
-          //   return;
-          // }
+          controller.abort();
 
-          // Play all animations
-          // for (const anim of activeAnimations) {
-          //   anim.play();
-          // }
-
-          // Allow a next gesture to be handled
-          // activeGesture = false;
-
-          // Signal all things that listen to the same controller to abort
-          // controller.abort();
-
-          // Clean up
-          // await Promise.all(activeAnimations.map((a) => a.finished));
-          // activeViewTransition = null;
+          // TODO: start view transition back to home screen or transition
+          // back to fullscreen
+          showMain(true);
         };
 
         // Clean up when releasing the pointer
@@ -447,35 +349,20 @@
             moveEvent.preventDefault();
             moveEvent.stopPropagation();
 
-            // Start a VT if none exist yet.
-            // Otherwise update the animations
-            if (!activeViewTransition) {
-              startViewTransition();
-            } else {
-              updateAnimations();
-            }
-
-            console.log("moveEvent", moveEvent);
-            console.log("moveEvent.screenY", moveEvent.screenY);
-            console.log("moveEvent.screenX", moveEvent.screenX);
-
-            // Calculate percentage of screen width and height
-            let percentageX = (moveEvent.screenX / screenWidth) * 100;
+            // Calculate percentage of screen height
             let percentageY = (moveEvent.screenY / screenHeight) * 100;
 
-            console.log("percentageX", percentageX, "percentageY", percentageY);
+            // Calculate clip percentage (invert so dragging down reduces the clip)
+            let clipPercentage = Math.max(100 - percentageY, 40);
+            let scalePercentage = Math.max(100 - percentageY, 40);
 
-            if (oldView) {
-              oldView.style.transform = `scale(${100 - percentageX}%)`;
-            } else {
-              console.log("no oldView");
+            console.log("percentageY", percentageY, "clipPercentage", clipPercentage);
+
+            if (detailScreen) {
+              // Use clip-path to smoothly clip the content
+              detailScreen.style.clipPath = `inset(0 0 ${100 - clipPercentage}% 0 round 40px)`;
+              detailScreen.style.transform = `scale(${scalePercentage}%)`;
             }
-
-            // Store new cursor position
-            currentY = moveEvent.pageY;
-            currentX = moveEvent.pageX;
-
-            console.log("currentX", currentX, "currentY", currentY);
           },
           { signal: controller.signal }
         );
@@ -485,6 +372,8 @@
         document.startViewTransition(() => {
           document.getElementById("main-screen").classList.add("hide");
           document.getElementById(animal + "-detail").classList.add("show");
+          document.getElementById(animal + "-detail").style.transform = "";
+          document.getElementById(animal + "-detail").style.clipPath = "";
         });
 
         if (updateURL) {
