@@ -350,18 +350,20 @@
             moveEvent.stopPropagation();
 
             // Calculate percentage of screen height
+            let percentageX = (moveEvent.screenX / screenWidth) * 100;
             let percentageY = (moveEvent.screenY / screenHeight) * 100;
 
             // Calculate clip percentage (invert so dragging down reduces the clip)
             let clipPercentage = Math.max(100 - percentageY, 40);
             let scalePercentage = Math.max(100 - percentageY, 40);
+            let translateXPercentage = (percentageX - 50) * 0.4;
 
             console.log("percentageY", percentageY, "clipPercentage", clipPercentage);
 
             if (detailScreen) {
               // Use clip-path to smoothly clip the content
               detailScreen.style.clipPath = `inset(0 0 ${100 - clipPercentage}% 0 round 40px)`;
-              detailScreen.style.transform = `scale(${scalePercentage}%)`;
+              detailScreen.style.transform = `scale(${scalePercentage}%) translateX(${translateXPercentage}%)`;
             }
           },
           { signal: controller.signal }
